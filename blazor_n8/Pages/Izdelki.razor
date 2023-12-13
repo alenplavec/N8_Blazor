@@ -1,7 +1,92 @@
 ﻿@page "/izdelki"
+@inject HttpClient Http
+@using blazor_n8.Models
 
 <h3>Izdelki</h3>
 
-@code {
+<div class="mb-3">
+    <select @onchange="ObSpremembiAtributa" class="form-select btn btn-secondary">
+        <option value="Naziv">Naziv</option>
+        <option value="Kategorija">Kategorija</option>
+        <option value="Cena">Cena</option>
+    </select>
 
+    <button class="btn btn-secondary" @onclick="() => SmerSortiranjaSpremenjena()">Sortiraj: @(sortiranjePadajoce ? "Padajoče" : "Naraščajoče")</button>
+</div>
+
+@if (izdelki == null)
+{
+        <p><em>Nalaganje...</em></p>
+}
+else
+{
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th @onclick='() => Sortiraj("Naziv")'>Naziv</th>
+                    <th>Opis</th>
+                    <th @onclick='() => Sortiraj("Kategorija")'>Kategorija</th>
+                    <th @onclick='() => Sortiraj("Cena")'>Cena</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var izdelek in izdelki)
+            {
+                <tr>
+                    <td>@izdelek.Id</td>
+                    <td>@izdelek.Naziv</td>
+                    <td>@izdelek.Opis</td>
+                    <td>@izdelek.Kategorija</td>
+                    <td>@izdelek.Cena</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+}
+
+
+@code {
+    private List<Izdelek> izdelki;
+    private string trenutniStolpecZaSortiranje;
+    private bool sortiranjePadajoce = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await NaloziIzdelke();
+    }
+
+    private async Task NaloziIzdelke()
+    {
+        var url = $"/izdelki?sortAttribute={trenutniStolpecZaSortiranje}&descending={(sortiranjePadajoce ? "true" : "false")}";
+        izdelki = await Http.GetFromJsonAsync<List<Izdelek>>(url);
+        StateHasChanged();
+    }
+
+    private async Task Sortiraj(string imeStolpca)
+    {
+        if (imeStolpca == trenutniStolpecZaSortiranje)
+        {
+            sortiranjePadajoce = !sortiranjePadajoce;
+        }
+        else
+        {
+            trenutniStolpecZaSortiranje = imeStolpca;
+            sortiranjePadajoce = false;
+        }
+
+        await NaloziIzdelke();
+    }
+
+    private async Task ObSpremembiAtributa(ChangeEventArgs e)
+    {
+        trenutniStolpecZaSortiranje = e.Value.ToString();
+        await NaloziIzdelke();
+    }
+
+    private async Task SmerSortiranjaSpremenjena()
+    {
+        sortiranjePadajoce = !sortiranjePadajoce;
+        await NaloziIzdelke();
+    }
 }

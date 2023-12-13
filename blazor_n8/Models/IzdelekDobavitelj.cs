@@ -1,4 +1,4 @@
-﻿namespace AIS_N3_Plavec_Alen.Models;
+﻿namespace blazor_n8.Models;
 
 public class IzdelekDobavitelj
 {

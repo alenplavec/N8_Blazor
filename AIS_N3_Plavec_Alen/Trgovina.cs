@@ -29,11 +29,11 @@ public class Trgovina
                     ? poizvedba.OrderByDescending(i => (double)i.Cena)
                     : poizvedba.OrderBy(i => (double)i.Cena);
             }
-        }
-        else
-        {
-            var smer = padajoce ? "descending" : "ascending";
-            poizvedba = poizvedba.OrderBy($"{attrSortiranja} {smer}");
+            else
+            {
+                var smer = padajoce ? "descending" : "ascending";
+                poizvedba = poizvedba.OrderBy($"{attrSortiranja} {smer}");
+            }
         }
 
         return poizvedba.ToList();
