@@ -1,6 +1,8 @@
 ﻿@page "/izdelki"
 @inject HttpClient Http
 @using blazor_n8.Models
+@using System.Text.Json
+@using System.Text
 
 <h3>Izdelki</h3>
 
@@ -28,6 +30,11 @@ else
                     <th>Opis</th>
                     <th @onclick='() => Sortiraj("Kategorija")'>Kategorija</th>
                     <th @onclick='() => Sortiraj("Cena")'>Cena</th>
+                    <th>
+                        <button class="btn btn-secondary" @onclick="() => PrikaziDobavitelje(-1)">Skrij Dobavitelje</button>
+                    </th>
+                    <th>Odstrani</th>
+
                 </tr>
             </thead>
             <tbody>
@@ -39,15 +46,39 @@ else
                     <td>@izdelek.Opis</td>
                     <td>@izdelek.Kategorija</td>
                     <td>@izdelek.Cena</td>
+                    <td>
+                        <button class="btn btn-info" @onclick="() => PrikaziDobavitelje(izdelek.Id)">Prikaži Dobavitelje</button>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger" @onclick="() => OdstraniIzdelek(izdelek)">Odstrani</button>
+                    </td>
                 </tr>
             }
             </tbody>
         </table>
+        //<h4>Najvišja cena:@PrikaziNajvisjoCeno()@najvisjaCena</h4>
+        <h5>Povprečna cena: @povprecnaCena</h5>
+        <h5>Izdelek z najvišjo ceno: @izdelekNajvisjaCena.Id | @izdelekNajvisjaCena.Naziv | @izdelekNajvisjaCena.Cena</h5><br/><br/>
+
+
 }
 
+@if (dobavitelji != null)
+{
+        <h4>Dobavitelji za izbrani izdelek</h4>
+        <ul>
+        @foreach (var dobavitelj in dobavitelji)
+        {
+                <li>@dobavitelj.Naziv</li>
+        }
+        </ul>
+}
 
 @code {
+    private Izdelek izdelekNajvisjaCena;
+    private decimal povprecnaCena = 0;
     private List<Izdelek> izdelki;
+    private List<Dobavitelj> dobavitelji;
     private string trenutniStolpecZaSortiranje;
     private bool sortiranjePadajoce = false;
 
@@ -58,6 +89,8 @@ else
 
     private async Task NaloziIzdelke()
     {
+        await PrikaziNajvisjoCeno();
+        await PrikaziPovprecnoCeno();
         var url = $"/izdelki?sortAttribute={trenutniStolpecZaSortiranje}&descending={(sortiranjePadajoce ? "true" : "false")}";
         izdelki = await Http.GetFromJsonAsync<List<Izdelek>>(url);
         StateHasChanged();
@@ -88,5 +121,34 @@ else
     {
         sortiranjePadajoce = !sortiranjePadajoce;
         await NaloziIzdelke();
+    }
+
+    private async Task PrikaziDobavitelje(int izdelekId)
+    {
+        if (izdelekId != -1)
+            dobavitelji = await Http.GetFromJsonAsync<List<Dobavitelj>>($"/izdelki/{izdelekId}/dobavitelji");
+        else dobavitelji = null;
+    }
+
+    private async Task OdstraniIzdelek(Izdelek izdelek)
+    {
+        var odgovor = await Http.DeleteAsync($"/izdelki/odstraniIzdelek/{izdelek.Id}");
+
+        if (odgovor.IsSuccessStatusCode)
+        {
+            izdelki.Remove(izdelek);
+            NaloziIzdelke();
+            StateHasChanged();
+        }
+    }
+
+    private async Task PrikaziNajvisjoCeno()
+    {
+        izdelekNajvisjaCena = await Http.GetFromJsonAsync<Izdelek>("/izdelki/najvisjaCena");
+    }
+
+    private async Task PrikaziPovprecnoCeno()
+    {
+        povprecnaCena = await Http.GetFromJsonAsync<decimal>("/izdelki/povprecnaCena");
     }
 }

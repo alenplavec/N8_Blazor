@@ -34,6 +34,7 @@ public class Program
             {
                 policy.AllowAnyOrigin();
                 policy.AllowAnyHeader();
+                policy.AllowAnyMethod();
             });
         });
 
@@ -241,9 +242,9 @@ public class Program
             .WithMetadata(new SwaggerOperationAttribute("Posodobi dobavitelja",
                 "Metoda, ki posodobi podatke o dobavitelju"));
 
-        app.MapDelete("/izdelki/odstraniIzdelek", ([FromBody] Izdelek izdelek) =>
+        app.MapDelete("/izdelki/odstraniIzdelek/{id}", (int id) =>
             {
-                var izdelekZaBrisanje = db.Izdelki.FirstOrDefault(x => x.Id == izdelek.Id);
+                var izdelekZaBrisanje = db.Izdelki.FirstOrDefault(x => x.Id == id);
                 if (izdelekZaBrisanje == null) return Results.NotFound("Izdelek ni bil najden.");
 
                 db.Izdelki.Remove(izdelekZaBrisanje);
@@ -251,21 +252,21 @@ public class Program
                 return Results.NoContent();
             }).Produces(StatusCodes.Status204NoContent)
             .Produces<Izdelek>(StatusCodes.Status404NotFound)
-            .WithMetadata(new SwaggerOperationAttribute("Dodaj izdelek", "Metoda, ki doda nov izdelek v bazo"));
+            .WithMetadata(new SwaggerOperationAttribute("Izbriši izdelek", "Metoda, ki izbriše izdelek iz baze"));
 
-        app.MapDelete("/dobavitelji/odstraniDobavitelja", ([FromBody] Dobavitelj dobavitelj) =>
+
+        app.MapDelete("/dobavitelji/odstraniDobavitelja/{id}", (int id) =>
             {
-                var najdenDobavitelj = db.Dobavitelji.FirstOrDefault(x => x.Id == dobavitelj.Id);
+                var najdenDobavitelj = db.Dobavitelji.FirstOrDefault(x => x.Id == id);
                 if (najdenDobavitelj == null) return Results.NotFound("Dobavitelj ni bil najden.");
 
                 db.Dobavitelji.Remove(najdenDobavitelj);
                 db.SaveChanges();
                 return Results.NoContent();
-            })
-            .Produces(StatusCodes.Status204NoContent)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-            .WithMetadata(new SwaggerOperationAttribute("Odstrani dobavitelja",
-                "Metoda, ki odstrani dobavitelja iz baze"));
+            }).Produces(StatusCodes.Status204NoContent)
+             .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+             .WithMetadata(new SwaggerOperationAttribute("Odstrani dobavitelja", "Metoda, ki odstrani dobavitelja iz baze"));
+
 
         app.MapDelete("/povezave/odstraniPovezavo", ([FromBody] IzdelekDobavitelj izdelekDobavitelj) =>
         {
