@@ -1,15 +1,33 @@
 ﻿@page "/"
 
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-4 text-center">
-            <a class="btn btn-primary" href="/izdelki">Izdelki</a>
-        </div>
-        <div class="col-md-4 text-center">
-            <a class="btn btn-secondary" href="/dobavitelji">Dobavitelji</a>
-        </div>
-        <div class="col-md-4 text-center">
-            <a class="btn btn-success" href="/povezave">Dobava</a>
-        </div>
+<div class="container mt-3">
+<div class="btn-group" role="group" aria-label="Basic example">
+    <button class="btn btn-primary" @onclick='() => CurrentPage = "izdelki"'>Izdelki</button>
+    <button class="btn btn-primary" @onclick='() => CurrentPage = "dobavitelji"'>Dobavitelji</button>
+    <button class="btn btn-secondary" @onclick='() => CurrentPage = "dobava"'>Dobava</button>
+</div>
+
+
+    <div class="mt-4">
+        @switch (CurrentPage)
+        {
+            case "izdelki":
+                <Izdelki />
+                break;
+            case "dobavitelji":
+                <Dobavitelji />
+                break;
+            case "dobava":
+                <Povezave />
+                break;
+            default:
+                <p>Please select a page.</p>
+                break;
+        }
     </div>
 </div>
+
+@code {
+    private string CurrentPage = ""; // Default to no selection
+}
+

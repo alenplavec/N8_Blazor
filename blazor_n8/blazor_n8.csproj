@@ -7,8 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BlazorStrap" Version="5.2.100-Preview3b" />
+    <PackageReference Include="MatBlazor" Version="2.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.11" PrivateAssets="all" />
+    <PackageReference Include="Radzen.Blazor" Version="4.23.2" />
+    <PackageReference Include="Syncfusion.Blazor.Core" Version="23.2.7" />
+    <PackageReference Include="Syncfusion.Blazor.Data" Version="23.2.7" />
+    <PackageReference Include="Syncfusion.Blazor.Inputs" Version="23.2.7" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="23.2.7" />
   </ItemGroup>
 
 </Project>
