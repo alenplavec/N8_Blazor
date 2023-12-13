@@ -5,6 +5,7 @@
 @using System.Text
 
 <h3>Izdelki</h3>
+<button class="btn btn-primary" @onclick="() => UrediIzdelek(new Izdelek())">Dodaj Izdelek</button>
 
 <div class="mb-3">
     <select @onchange="ObSpremembiAtributa" class="form-select btn btn-secondary">
@@ -74,8 +75,21 @@ else
         </ul>
 }
 
+@if (trenutniIzdelek != null)
+{
+    <EditForm Model="trenutniIzdelek" OnValidSubmit="ShraniIzdelek">
+        <InputText @bind="trenutniIzdelek.Naziv" />
+        <InputText @bind="trenutniIzdelek.Opis" />
+        <InputText @bind="trenutniIzdelek.Kategorija" />
+        <InputNumber @bind="trenutniIzdelek.Cena" />
+        <button type="submit" class="btn btn-success">Shrani</button>
+    </EditForm>
+}
+
+
 @code {
     private Izdelek izdelekNajvisjaCena;
+    private Izdelek trenutniIzdelek;
     private decimal povprecnaCena = 0;
     private List<Izdelek> izdelki;
     private List<Dobavitelj> dobavitelji;
@@ -150,5 +164,29 @@ else
     private async Task PrikaziPovprecnoCeno()
     {
         povprecnaCena = await Http.GetFromJsonAsync<decimal>("/izdelki/povprecnaCena");
+    }
+
+    private void UrediIzdelek(Izdelek izdelek)
+    {
+        trenutniIzdelek = izdelek;
+    }
+
+    private async Task ShraniIzdelek()
+    {
+      HttpResponseMessage odgovor;
+        if (trenutniIzdelek.Id == 0)
+        {
+            odgovor = await Http.PostAsJsonAsync("/izdelki/dodajIzdelek", trenutniIzdelek);
+        }
+        else
+        {
+            odgovor = await Http.PutAsJsonAsync($"/izdelki/urediIzdelek/{trenutniIzdelek.Id}", trenutniIzdelek);
+        }
+
+        if (odgovor.IsSuccessStatusCode)
+        {
+            trenutniIzdelek = null;
+            await NaloziIzdelke();
+        }
     }
 }
