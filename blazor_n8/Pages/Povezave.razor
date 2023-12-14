@@ -1,8 +1,97 @@
 ﻿@page "/povezave"
+@inject HttpClient Http
+@using blazor_n8.Models
+@using System.Text.Json
+@using System.Text
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Text.Json.Serialization
 
+<h3>Povezave</h3>
 
-<h3>Dobava</h3>
+<div class="mb-3">
+    <select @onchange="ObSpremembiAtributa" class="form-select">
+        <option value="IzdelekId">Izdelek ID</option>
+        <option value="DobaviteljId">Dobavitelj ID</option>
+    </select>
+
+    <button class="btn btn-secondary" @onclick="() => SmerSortiranjaSpremenjena()">Sortiraj: @(sortiranjePadajoce ? "Padajoče" : "Naraščajoče")</button>
+</div>
+
+@if (povezave == null)
+{
+        <p><em>Nalaganje...</em></p>
+}
+else
+{
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Izdelek ID</th>
+                    <th>Dobavitelj ID</th>
+                    <th>Zaloga</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var IzdelekDobavitelj in povezave)
+            {
+                    <tr>
+                        <td>@IzdelekDobavitelj.IzdelekId</td>
+                        <td>@IzdelekDobavitelj.DobaviteljId</td>
+                        <td>@IzdelekDobavitelj.KolicinaNaZalogi</td>
+                    </tr>
+            }
+            </tbody>
+        </table>
+}
 
 @code {
+    private List<IzdelekDobavitelj> povezave;
+    private string trenutniStolpecZaSortiranje = string.Empty;
+    private bool sortiranjePadajoce = false;
 
+    protected override async Task OnInitializedAsync()
+    {
+        await NaloziPovezave();
+    }
+
+    private async Task NaloziPovezave()
+    {
+        var url = $"/povezave?attrSortiranja={trenutniStolpecZaSortiranje}&padajoce={sortiranjePadajoce}";
+        try
+        {
+            var odgovor = await Http.GetAsync(url);
+            if (odgovor.IsSuccessStatusCode)
+            {
+                var odgovorVsebina = await odgovor.Content.ReadAsStringAsync();
+                povezave = JsonSerializer.Deserialize<List<IzdelekDobavitelj>>(odgovorVsebina, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        ReferenceHandler = ReferenceHandler.IgnoreCycles
+                    });
+            }
+            else
+            {
+                // Dodajte obdelavo napak
+                Console.WriteLine("Napaka pri pridobivanju podatkov: " + odgovor.ReasonPhrase);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Dodajte obdelavo izjem
+            Console.WriteLine("Izjema pri pridobivanju podatkov: " + ex.Message);
+        }
+        StateHasChanged();
+    }
+
+    private async Task ObSpremembiAtributa(ChangeEventArgs e)
+    {
+        trenutniStolpecZaSortiranje = e.Value.ToString();
+        await NaloziPovezave();
+    }
+
+    private async Task SmerSortiranjaSpremenjena()
+    {
+        sortiranjePadajoce = !sortiranjePadajoce;
+        await NaloziPovezave();
+    }
 }

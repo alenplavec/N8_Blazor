@@ -70,34 +70,8 @@ public class Trgovina
         var oblikovaniPodatki = poizvedba.ToList().Select(x => new
         {
             x.Id,
-            Izdelek = new
-            {
-                x.Izdelek.Id,
-                x.Izdelek.Naziv,
-                x.Izdelek.Opis,
-                x.Izdelek.Cena,
-                IzdelekDobavitelji = x.Izdelek.IzdelekDobavitelji.Select(id => new
-                {
-                    id.Id,
-                    id.IzdelekId,
-                    id.DobaviteljId,
-                    id.KolicinaNaZalogi
-                }).ToList()
-            },
-            Dobavitelj = new
-            {
-                x.Dobavitelj.Id,
-                x.Dobavitelj.Naziv,
-                x.Dobavitelj.Lokacija,
-                x.Dobavitelj.Kontakt,
-                IzdelekDobavitelji = x.Dobavitelj.IzdelekDobavitelji.Select(id => new
-                {
-                    id.Id,
-                    id.IzdelekId,
-                    id.DobaviteljId,
-                    id.KolicinaNaZalogi
-                }).ToList()
-            },
+            x.IzdelekId,
+            x.DobaviteljId,
             x.KolicinaNaZalogi
         }).ToList();
 
