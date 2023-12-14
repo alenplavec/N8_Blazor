@@ -237,8 +237,8 @@ public class Program
                 obstojecDobavitelj.Kontakt = dobavitelj.Kontakt;
 
                 db.SaveChanges();
-                return Results.NoContent();
-            }).Produces(StatusCodes.Status204NoContent)
+                return Results.Ok();
+            }).Produces(StatusCodes.Status200OK)
             .Produces<Dobavitelj>(StatusCodes.Status404NotFound)
             .WithMetadata(new SwaggerOperationAttribute("Posodobi dobavitelja",
                 "Metoda, ki posodobi podatke o dobavitelju"));

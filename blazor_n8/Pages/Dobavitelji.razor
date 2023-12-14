@@ -1,8 +1,166 @@
 ﻿@page "/dobavitelji"
-
+@inject HttpClient Http
+@using blazor_n8.Models
+@using System.Text.Json
+@using System.Text
+@using Microsoft.AspNetCore.Components.Forms
 
 <h3>Dobavitelji</h3>
+<button class="btn btn-primary" @onclick="() => UrediDobavitelja(new Dobavitelj())">Dodaj Dobavitelja</button>
+
+<div class="mb-3">
+    <select @onchange="ObSpremembiAtributa" class="form-select btn btn-secondary">
+        <option value="Naziv">Naziv</option>
+        <option value="Lokacija">Lokacija</option>
+        <option value="Kontakt">Kontakt</option>
+    </select>
+
+    <button class="btn btn-secondary" @onclick="() => SmerSortiranjaSpremenjena()">Sortiraj: @(sortiranjePadajoce ? "Padajoče" : "Naraščajoče")</button>
+</div>
+
+@if (dobavitelji == null)
+{
+    <p><em>Nalaganje...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Naziv</th>
+                <th>Lokacija</th>
+                <th>Kontakt</th>
+                <th>Nadzor</th>
+                <th>
+                    <button class="btn btn-secondary" @onclick="() => PrikaziIzdelkeDobavitelja(-1)">Skrij Izdelke</button>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var dobavitelj in dobavitelji)
+        {
+            <tr>
+                <td>@dobavitelj.Id</td>
+                <td>@dobavitelj.Naziv</td>
+                <td>@dobavitelj.Lokacija</td>
+                <td>@dobavitelj.Kontakt</td>
+                <td>
+                    <button class="btn btn-danger" @onclick="() => OdstraniDobavitelja(dobavitelj)">Odstrani</button> 
+                    <button class="btn btn-secondary" @onclick="() => UrediDobavitelja(dobavitelj)">Uredi</button>
+                </td>
+                <td>
+                    <button class="btn btn-info" @onclick="() => PrikaziIzdelkeDobavitelja(dobavitelj.Id)">Prikaži Izdelke</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+<h5>Dobavitelj z Največ Izdelki: @dobaviteljNajvecIzdelkov?.Naziv</h5>
+
+@if (trenutniDobavitelj != null)
+{
+    <h4><br>Urejanje: </h4>
+    <EditForm Model="trenutniDobavitelj" OnValidSubmit="ShraniDobavitelja">
+        <InputText @bind-Value="trenutniDobavitelj.Naziv" />
+        <InputText @bind-Value="trenutniDobavitelj.Lokacija" />
+        <InputText @bind-Value="trenutniDobavitelj.Kontakt" />
+        <button type="submit" class="btn btn-success">Shrani</button>
+    </EditForm>
+}
+
+@if (izdelkiDobavitelja != null)
+{
+        <h4>Izdelki Dobavitelja: @trenutniDobavitelj?.Naziv</h4>
+        <ul>
+        @foreach (var izdelek in izdelkiDobavitelja)
+        {
+                <li>@izdelek.Naziv</li>
+        }
+        </ul>
+}
 
 @code {
+    private Dobavitelj dobaviteljNajvecIzdelkov;
+    private List<Izdelek> izdelkiDobavitelja;
+    private Dobavitelj trenutniDobavitelj;
+    private List<Dobavitelj> dobavitelji;
+    private string trenutniStolpecZaSortiranje = string.Empty;
+    private bool sortiranjePadajoce = false;
 
+    protected override async Task OnInitializedAsync()
+    {
+        await NaloziDobavitelje();
+        await PrikaziDobaviteljaZNajvecIzdelki();
+    }
+
+    private async Task ObSpremembiAtributa(ChangeEventArgs e)
+    {
+        trenutniStolpecZaSortiranje = e.Value.ToString();
+        await NaloziDobavitelje();
+    }
+
+    private async Task SmerSortiranjaSpremenjena()
+    {
+        sortiranjePadajoce = !sortiranjePadajoce;
+        await NaloziDobavitelje();
+    }
+
+    private async Task NaloziDobavitelje()
+    {
+        var url = $"/dobavitelji?sortAttribute={trenutniStolpecZaSortiranje}&descending={(sortiranjePadajoce ? "true" : "false")}";
+        dobavitelji = await Http.GetFromJsonAsync<List<Dobavitelj>>(url);
+        StateHasChanged();
+    }
+
+    private void UrediDobavitelja(Dobavitelj dobavitelj)
+    {
+        trenutniDobavitelj = dobavitelj;
+    }
+
+    private async Task ShraniDobavitelja()
+    {
+        HttpResponseMessage odgovor;
+        if (trenutniDobavitelj.Id == 0)
+        {
+            odgovor = await Http.PostAsJsonAsync("/dobavitelji/dodajDobavitelja", trenutniDobavitelj);
+        }
+        else
+        {
+            odgovor = await Http.PutAsJsonAsync($"/dobavitelji/posodobiDobavitelja", trenutniDobavitelj);
+        }
+
+        if (odgovor.IsSuccessStatusCode)
+        {
+            trenutniDobavitelj = null;
+            await NaloziDobavitelje();
+            StateHasChanged();
+        }
+    }
+
+    private async Task OdstraniDobavitelja(Dobavitelj dobavitelj)
+    {
+        var odgovor = await Http.DeleteAsync($"/dobavitelji/odstraniDobavitelja/{dobavitelj.Id}");
+
+        if (odgovor.IsSuccessStatusCode)
+        {
+            dobavitelji.Remove(dobavitelj);
+            await NaloziDobavitelje();
+            StateHasChanged();
+        }
+    }
+
+    private async Task PrikaziDobaviteljaZNajvecIzdelki()
+    {
+        dobaviteljNajvecIzdelkov = await Http.GetFromJsonAsync<Dobavitelj>("/dobavitelji/najvecIzdelkov");
+    }
+
+    private async Task PrikaziIzdelkeDobavitelja(int dobaviteljId)
+    {
+        if (dobaviteljId != -1)
+            izdelkiDobavitelja = await Http.GetFromJsonAsync<List<Izdelek>>($"/dobavitelji/{dobaviteljId}/izdelki");
+        else izdelkiDobavitelja = null;
+    }
 }
