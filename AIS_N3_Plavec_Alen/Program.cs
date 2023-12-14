@@ -218,6 +218,7 @@ public class Program
                 obstojecIzdelek.Naziv = izdelek.Naziv;
                 obstojecIzdelek.Opis = izdelek.Opis;
                 obstojecIzdelek.Cena = izdelek.Cena;
+                obstojecIzdelek.Kategorija = izdelek.Kategorija;
 
                 db.SaveChanges();
                 return Results.Ok();

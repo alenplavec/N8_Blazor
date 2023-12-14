@@ -184,7 +184,7 @@ else
         }
         else
         {
-            odgovor = await Http.PutAsJsonAsync($"/izdelki/urediIzdelek/{trenutniIzdelek.Id}", trenutniIzdelek);
+            odgovor = await Http.PutAsJsonAsync($"/izdelki/posodobiIzdelek/", trenutniIzdelek);
         }
 
         if (odgovor.IsSuccessStatusCode)
