@@ -3,6 +3,7 @@
 @using blazor_n8.Models
 @using System.Text.Json
 @using System.Text
+@using Microsoft.AspNetCore.Components.Forms
 
 <h3>Izdelki</h3>
 <button class="btn btn-primary" @onclick="() => UrediIzdelek(new Izdelek())">Dodaj Izdelek</button>
@@ -35,7 +36,7 @@ else
                         <button class="btn btn-secondary" @onclick="() => PrikaziDobavitelje(-1)">Skrij Dobavitelje</button>
                     </th>
                     <th>Odstrani</th>
-
+                    <th>Uredi</th>
                 </tr>
             </thead>
             <tbody>
@@ -53,6 +54,9 @@ else
                     <td>
                         <button class="btn btn-danger" @onclick="() => OdstraniIzdelek(izdelek)">Odstrani</button>
                     </td>
+                     <td>
+                    <button class="btn btn-secondary" @onclick="() => UrediIzdelek(izdelek)">Uredi</button>
+                </td>
                 </tr>
             }
             </tbody>
@@ -78,10 +82,10 @@ else
 @if (trenutniIzdelek != null)
 {
     <EditForm Model="trenutniIzdelek" OnValidSubmit="ShraniIzdelek">
-        <InputText @bind="trenutniIzdelek.Naziv" />
-        <InputText @bind="trenutniIzdelek.Opis" />
-        <InputText @bind="trenutniIzdelek.Kategorija" />
-        <InputNumber @bind="trenutniIzdelek.Cena" />
+        <InputText @bind-Value="trenutniIzdelek.Naziv" />
+        <InputText @bind-Value="trenutniIzdelek.Opis" />
+        <InputText @bind-Value="trenutniIzdelek.Kategorija" />
+        <InputNumber @bind-Value="trenutniIzdelek.Cena" />
         <button type="submit" class="btn btn-success">Shrani</button>
     </EditForm>
 }
