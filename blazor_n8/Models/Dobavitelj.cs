@@ -6,5 +6,5 @@ public class Dobavitelj
     public string Naziv { get; set; }
     public string Lokacija { get; set; }
     public string Kontakt { get; set; }
-   // public List<IzdelekDobavitelj> IzdelekDobavitelji { get; set; }
+    public List<IzdelekDobavitelj> IzdelekDobavitelji { get; set; }
 }
