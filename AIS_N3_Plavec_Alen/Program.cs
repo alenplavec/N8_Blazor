@@ -129,33 +129,31 @@ public class Program
             .WithMetadata(new SwaggerOperationAttribute("Dodaj novega dobavitelja",
                 "Metoda, ki doda novega dobavitelja v bazo"));
 
-        app.MapPost("/povezave/dodajPovezavo", ([FromBody] IzdelekDobavitelj izdelekDobavitelj) =>
-        {
-            var izdelek = db.Izdelki.Find(izdelekDobavitelj.IzdelekId);
-            var dobavitelj = db.Dobavitelji.Find(izdelekDobavitelj.DobaviteljId);
-
-            if (izdelek != null && dobavitelj != null)
+        app.MapPost("/povezave/dodajPovezavo", ([FromBody] IzdelekDobaviteljDTO izdelekDobaviteljDTO) =>
             {
-                var ustvarjenaPovezava = new IzdelekDobavitelj
+                if (db.Izdelki.Find(izdelekDobaviteljDTO.IzdelekId) != null && db.Dobavitelji.Find(izdelekDobaviteljDTO.DobaviteljId) != null)
                 {
-                    IzdelekId = izdelekDobavitelj.IzdelekId,
-                    DobaviteljId = izdelekDobavitelj.DobaviteljId,
-                    Izdelek = izdelek,
-                    Dobavitelj = dobavitelj,
-                    KolicinaNaZalogi = izdelekDobavitelj.KolicinaNaZalogi
-                };
+                    var ustvarjenaPovezava = new IzdelekDobavitelj
+                    {
+                        IzdelekId = izdelekDobaviteljDTO.IzdelekId,
+                        DobaviteljId = izdelekDobaviteljDTO.DobaviteljId,
+                        KolicinaNaZalogi = izdelekDobaviteljDTO.KolicinaNaZalogi
+                    };
 
-                db.IzdelekDobavitelji.Add(ustvarjenaPovezava);
-                db.SaveChanges();
-                return Results.Ok("Povezava ustvarjena.");
-            }
+                    ustvarjenaPovezava.Izdelek = db.Izdelki.Find(izdelekDobaviteljDTO.IzdelekId);
+                    ustvarjenaPovezava.Dobavitelj = db.Dobavitelji.Find(izdelekDobaviteljDTO.DobaviteljId);
 
-            return Results.NotFound("Izdelek ali dobavitelj ni bil najden.");
-        }).Produces(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status409Conflict)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
-            .WithMetadata(new SwaggerOperationAttribute("Dodaj povezavo izdelek-dobavitelj",
-                "Metoda, ki doda povezavo med izdelkom in dobaviteljem"));
+                    db.IzdelekDobavitelji.Add(ustvarjenaPovezava);
+                    db.SaveChanges();
+                    return Results.Ok("Povezava ustvarjena.");
+                }
+
+                return Results.NotFound("Izdelek ali dobavitelj ni bil najden.");
+            }).Produces(StatusCodes.Status200OK)
+              .Produces<ProblemDetails>(StatusCodes.Status409Conflict)
+              .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
+              .WithMetadata(new SwaggerOperationAttribute("Dodaj povezavo izdelek-dobavitelj",
+                  "Metoda, ki doda povezavo med izdelkom in dobaviteljem"));
 
         app.MapPost("/izdelki/dodajDvaIzdelka", () =>
         {
@@ -269,16 +267,16 @@ public class Program
              .WithMetadata(new SwaggerOperationAttribute("Odstrani dobavitelja", "Metoda, ki odstrani dobavitelja iz baze"));
 
 
-        app.MapDelete("/povezave/odstraniPovezavo", ([FromBody] IzdelekDobavitelj izdelekDobavitelj) =>
-        {
-            if (izdelekDobavitelj == null) return Results.BadRequest("Neveljavni podatki o povezavi.");
+        app.MapDelete("/povezave/odstraniPovezavo/{id}", (int id) =>
+            {
+                var najdenIzdelekDobavitelj = db.IzdelekDobavitelji.FirstOrDefault(x => x.Id == id);
+                if (najdenIzdelekDobavitelj == null) return Results.NotFound("Povezava ni bila najdena.");
 
-            var najdenIzdelekDobavitelj = db.IzdelekDobavitelji.FirstOrDefault(x => x.Id == izdelekDobavitelj.Id);
-            db.IzdelekDobavitelji.Remove(najdenIzdelekDobavitelj);
-            db.SaveChanges();
-            return Results.NoContent();
-        }).WithMetadata(new SwaggerOperationAttribute("Odstrani povezavo",
-                "Metoda, ki odstrani" +
-                " podatke o dobavitelju"));
+                db.IzdelekDobavitelji.Remove(najdenIzdelekDobavitelj);
+                db.SaveChanges();
+                return Results.NoContent();
+            }).Produces(StatusCodes.Status204NoContent)
+             .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+             .WithMetadata(new SwaggerOperationAttribute("Odstrani povezavo", "Metoda, ki odstrani povezavo iz baze"));
     }
 }

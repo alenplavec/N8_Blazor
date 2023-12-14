@@ -2,11 +2,11 @@
 @inject HttpClient Http
 @using blazor_n8.Models
 @using System.Text.Json
-@using System.Text
 @using Microsoft.AspNetCore.Components.Forms
-@using System.Text.Json.Serialization
 
 <h3>Povezave</h3>
+
+<button class="btn btn-primary" @onclick="() => dodajanjePovezave = true">Dodaj Povezavo</button>
 
 <div class="mb-3">
     <select @onchange="ObSpremembiAtributa" class="form-select">
@@ -14,7 +14,7 @@
         <option value="DobaviteljId">Dobavitelj ID</option>
     </select>
 
-    <button class="btn btn-secondary" @onclick="() => SmerSortiranjaSpremenjena()">Sortiraj: @(sortiranjePadajoce ? "Padajoče" : "Naraščajoče")</button>
+    <button class="btn btn-secondary" @onclick="SmerSortiranjaSpremenjena">Sortiraj: @(sortiranjePadajoce ? "Padajoče" : "Naraščajoče")</button>
 </div>
 
 @if (povezave == null)
@@ -27,25 +27,54 @@ else
             <thead>
                 <tr>
                     <th>Izdelek ID</th>
+                    <th>Izdelek Naziv</th>
                     <th>Dobavitelj ID</th>
+                    <th>Dobavitelj Naziv</th>
                     <th>Zaloga</th>
+                    <th>Akcije</th>
                 </tr>
             </thead>
             <tbody>
-            @foreach (var IzdelekDobavitelj in povezave)
+            @foreach (var povezava in povezave)
             {
                     <tr>
-                        <td>@IzdelekDobavitelj.IzdelekId</td>
-                        <td>@IzdelekDobavitelj.DobaviteljId</td>
-                        <td>@IzdelekDobavitelj.KolicinaNaZalogi</td>
+                        <td>@povezava.IzdelekId</td>
+                        <td>@povezava.IzdelekNaziv</td>
+                        <td>@povezava.DobaviteljId</td>
+                        <td>@povezava.DobaviteljNaziv</td>
+                        <td>@povezava.KolicinaNaZalogi</td>
+                        <td>
+                            <button class="btn btn-danger" @onclick="() => OdstraniPovezavo(povezava.Id)">Odstrani</button>
+                        </td>
                     </tr>
             }
             </tbody>
         </table>
 }
 
+@if (dodajanjePovezave)
+{
+        <EditForm Model="novaPovezava" OnValidSubmit="DodajPovezavo">
+            <div class="mb-3">
+                <label for="izdelekId" class="form-label">Izdelek ID</label>
+                <InputNumber id="izdelekId" class="form-control" @bind-Value="novaPovezava.IzdelekId" />
+            </div>
+            <div class="mb-3">
+                <label for="dobaviteljId" class="form-label">Dobavitelj ID</label>
+                <InputNumber id="dobaviteljId" class="form-control" @bind-Value="novaPovezava.DobaviteljId" />
+            </div>
+            <div class="mb-3">
+                <label for="kolicina" class="form-label">Količina na zalogi</label>
+                <InputNumber id="kolicina" class="form-control" @bind-Value="novaPovezava.KolicinaNaZalogi" />
+            </div>
+            <button type="submit" class="btn btn-success">Shrani</button>
+        </EditForm>
+}
+
 @code {
-    private List<IzdelekDobavitelj> povezave;
+    private IzdelekDobaviteljDTO novaPovezava = new IzdelekDobaviteljDTO();
+    private bool dodajanjePovezave = false;
+    private List<IzdelekDobaviteljDTO> povezave;
     private string trenutniStolpecZaSortiranje = string.Empty;
     private bool sortiranjePadajoce = false;
 
@@ -57,30 +86,7 @@ else
     private async Task NaloziPovezave()
     {
         var url = $"/povezave?attrSortiranja={trenutniStolpecZaSortiranje}&padajoce={sortiranjePadajoce}";
-        try
-        {
-            var odgovor = await Http.GetAsync(url);
-            if (odgovor.IsSuccessStatusCode)
-            {
-                var odgovorVsebina = await odgovor.Content.ReadAsStringAsync();
-                povezave = JsonSerializer.Deserialize<List<IzdelekDobavitelj>>(odgovorVsebina, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true,
-                        ReferenceHandler = ReferenceHandler.IgnoreCycles
-                    });
-            }
-            else
-            {
-                // Dodajte obdelavo napak
-                Console.WriteLine("Napaka pri pridobivanju podatkov: " + odgovor.ReasonPhrase);
-            }
-        }
-        catch (Exception ex)
-        {
-            // Dodajte obdelavo izjem
-            Console.WriteLine("Izjema pri pridobivanju podatkov: " + ex.Message);
-        }
-        StateHasChanged();
+        povezave = await Http.GetFromJsonAsync<List<IzdelekDobaviteljDTO>>(url);
     }
 
     private async Task ObSpremembiAtributa(ChangeEventArgs e)
@@ -93,5 +99,25 @@ else
     {
         sortiranjePadajoce = !sortiranjePadajoce;
         await NaloziPovezave();
+    }
+
+    private async Task DodajPovezavo()
+    {
+        var odgovor = await Http.PostAsJsonAsync("/povezave/dodajPovezavo", novaPovezava);
+        if (odgovor.IsSuccessStatusCode)
+        {
+            dodajanjePovezave = false;
+            novaPovezava = new IzdelekDobaviteljDTO();
+            await NaloziPovezave();
+        }
+    }
+
+    private async Task OdstraniPovezavo(int id)
+    {
+        var odgovor = await Http.DeleteAsync($"/povezave/odstraniPovezavo/{id}");
+        if (odgovor.IsSuccessStatusCode)
+        {
+            await NaloziPovezave();
+        }
     }
 }

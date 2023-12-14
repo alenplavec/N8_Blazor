@@ -55,11 +55,12 @@ public class Trgovina
     }
 
     private readonly HashSet<string> dovoljenaPoljaPovezave = new HashSet<string> { "IzdelekId", "DobaviteljId" };
-    public string PridobiSerializiranePovezave(string attrSortiranja, bool padajoce)
+    public List<IzdelekDobaviteljDTO> PridobiSerializiranePovezave(string attrSortiranja, bool padajoce)
     {
-        var poizvedba = _db.IzdelekDobavitelji.Include(x => x.Izdelek)
-                                              .Include(x => x.Dobavitelj)
-                                              .AsQueryable();
+        var poizvedba = _db.IzdelekDobavitelji
+                           .Include(x => x.Izdelek)
+                           .Include(x => x.Dobavitelj)
+                           .AsQueryable();
 
         if (!string.IsNullOrEmpty(attrSortiranja) && dovoljenaPoljaPovezave.Contains(attrSortiranja))
         {
@@ -67,22 +68,19 @@ public class Trgovina
             poizvedba = poizvedba.OrderBy($"{attrSortiranja} {smer}");
         }
 
-        var oblikovaniPodatki = poizvedba.ToList().Select(x => new
+        var oblikovaniPodatki = poizvedba.Select(x => new IzdelekDobaviteljDTO
         {
-            x.Id,
-            x.IzdelekId,
-            x.DobaviteljId,
-            x.KolicinaNaZalogi
+            Id = x.Id,
+            IzdelekId = x.IzdelekId,
+            IzdelekNaziv = x.Izdelek.Naziv,
+            DobaviteljId = x.DobaviteljId,
+            DobaviteljNaziv = x.Dobavitelj.Naziv,
+            KolicinaNaZalogi = x.KolicinaNaZalogi
         }).ToList();
 
-        var json = JsonSerializer.Serialize(oblikovaniPodatki, new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            ReferenceHandler = ReferenceHandler.IgnoreCycles
-        });
-
-        return json;
+        return oblikovaniPodatki;
     }
+
 
     public List<Izdelek> PridobiIzdelkePoDobaviteljId(int id)
     {
