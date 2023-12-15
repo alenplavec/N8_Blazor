@@ -1,38 +1,33 @@
 ﻿@page "/"
+
+@namespace blazor_n8
+
 <div class="d-flex" style="height: 100vh;">
-    <div class="bg-dark text-white" style="width: 200px;">
-        <div class="nav flex-column">
-            <a href="javascript:void(0)" class="pl-1 text-white text-decoration-none py-2 d-block font-weight-bold @(CurrentPage == "" ? "bg-primary" : "")" @onclick='() => CurrentPage = ""'>Domov</a>
-            <div class="">
-                <a href="javascript:void(0)" class="pl-3 text-white text-decoration-none py-2 d-block @(CurrentPage == "izdelki" ? "bg-primary" : "")" @onclick='() => CurrentPage = "izdelki"'>Izdelki</a>
-                <a href="javascript:void(0)" class="pl-3 text-white text-decoration-none py-2 d-block @(CurrentPage == "dobavitelji" ? "bg-primary" : "")" @onclick='() => CurrentPage = "dobavitelji"'>Dobavitelji</a>
-                <a href="javascript:void(0)" class="pl-3 text-white text-decoration-none py-2 d-block @(CurrentPage == "dobava" ? "bg-primary" : "")" @onclick='() => CurrentPage = "dobava"'>Dobava</a>
-            </div>
+    <div class="bg-dark text-white" style="width: 200px; height: 100vh; position: fixed;">
+        <a href="javascript:void(0)" class="pl-1 text-white text-decoration-none py-2 d-block font-weight-bold @(TrenutnaStran == "" ? "bg-primary" : "")" @onclick='() => TrenutnaStran = ""'>Domov</a>
+        <div class="">
+            <a href="javascript:void(0)" class="pl-3 text-white text-decoration-none py-2 d-block @(TrenutnaStran == "izdelki" ? "bg-primary" : "")" @onclick='() => TrenutnaStran = "izdelki"'>Izdelki</a>
+            <a href="javascript:void(0)" class="pl-3 text-white text-decoration-none py-2 d-block @(TrenutnaStran == "dobavitelji" ? "bg-primary" : "")" @onclick='() => TrenutnaStran = "dobavitelji"'>Dobavitelji</a>
+            <a href="javascript:void(0)" class="pl-3 text-white text-decoration-none py-2 d-block @(TrenutnaStran == "dobava" ? "bg-primary" : "")" @onclick='() => TrenutnaStran = "dobava"'>Dobava</a>    
         </div>
     </div>
-    <div class="flex-grow-1 p-3">
-        @switch (CurrentPage)
-            {
-                case "":
-                    <h1>Naloga 8: Blazor odjemalec</h1>
-                    break;
-                case "izdelki":
-                    <Izdelki />
-                    break;
-                case "dobavitelji":
-                    <Dobavitelji />
-                    break;
-                case "dobava":
-                    <Povezave />
-                    break;
-                default:
-                    <p>Please select a page.</p>
-                    break;
-            }
-        </div>
+    <div class="flex-grow-1 p-3" style="margin-left: 200px;">
+        @switch (TrenutnaStran)
+        {
+            case "":
+                <h1>Naloga 8: Blazor odjemalec</h1>
+                break;
+            case "izdelki":
+                <Izdelki />
+                break;
+            case "dobavitelji":
+                <Dobavitelji />
+                break;
+            case "dobava":
+                <Povezave />
+                break;
+            default:
+                <p>Nobena stran izbrana.</p>
+                break;
+        }    </div>
 </div>
-
-
-@code {
-    private string CurrentPage = "";
-}

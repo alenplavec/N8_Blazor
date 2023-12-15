@@ -14,11 +14,6 @@ namespace blazor_n8
         private string trenutniStolpecZaSortiranje;
         private bool sortiranjePadajoce = false;
 
-        public Izdelki(HttpClient http)
-        {
-            Http = http;
-        }
-
         protected override async Task OnInitializedAsync()
         {
             await NaloziIzdelke();

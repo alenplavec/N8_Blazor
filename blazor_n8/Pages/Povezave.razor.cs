@@ -12,11 +12,6 @@ namespace blazor_n8
         private bool sortiranjePadajoce = false;
         private string trenutniStolpecZaSortiranje = string.Empty;
 
-        public Povezave(HttpClient http)
-        {
-            Http = http;
-        }
-
         protected override async Task OnInitializedAsync()
         {
             await NaloziPovezave();

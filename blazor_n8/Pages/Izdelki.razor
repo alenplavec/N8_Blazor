@@ -1,9 +1,8 @@
 ﻿@page "/izdelki"
 @inject HttpClient Http
 @using blazor_n8.Models
-@using System.Text.Json
-@using System.Text
 @using Microsoft.AspNetCore.Components.Forms
+@using System.Globalization
 
 @namespace blazor_n8
 
@@ -35,7 +34,7 @@ else
             <th @onclick='() => Sortiraj("Kategorija")'>Kategorija</th>
             <th @onclick='() => Sortiraj("Cena")'>Cena</th>
             <th>
-                <button class="btn btn-secondary" @onclick="() => PrikaziDobavitelje(-1)">Skrij Dobavitelje</button>
+                <button class="btn btn-secondary" @onclick="() => PrikaziDobavitelje(-1)">Skrij</button>
             </th>
             <th>Odstrani</th>
             <th>Uredi</th>
@@ -66,34 +65,38 @@ else
 <h5>Povprečna cena: @povprecnaCena</h5>
 <h5>Izdelek z najvišjo ceno: @izdelekNajvisjaCena.Id | @izdelekNajvisjaCena.Naziv | @izdelekNajvisjaCena.Cena</h5><br/><br/>
 
-   var najvisjaCena = izdelki.Max(i => i.Cena);
+var najvisjaCena = izdelki.Max(i => i.Cena);
 
-    <div style="overflow-y: auto; max-height: 500px;">
-        @foreach (var izdelek in izdelki)
-        {
-            var barWidth = (izdelek.Cena / najvisjaCena) * 100;
-            <div style="margin-bottom: 10px;">
-                <div style="width: 200px; display: inline-block; vertical-align: middle;">
-                    @izdelek.Naziv
-                </div>
-                <div style="width: @barWidth%; max-width: 60%; height: 20px; background-color: skyblue; display: inline-block; vertical-align: middle;">
-                      &nbsp;
-                </div>
-                <span style="padding-left: 5px;">@izdelek.Cena €</span>
+<br>
+<h5>Cene izdelkov:</h5>
+<div style="overflow-y: auto; max-height: 500px;">
+    @foreach (var izdelek in izdelki)
+    {
+        var barWidth = (izdelek.Cena / najvisjaCena) * 100;
+        <div style="margin-bottom: 10px;">
+            <div style="width: 200px; display: inline-block; vertical-align: middle;">
+            @izdelek.Naziv
             </div>
-        }
-    </div>
+                    <div style="width: @(barWidth.ToString("0.00", CultureInfo.InvariantCulture))%; max-width: 60%; height: 20px; background-color: skyblue; display: inline-block; vertical-align: middle; margin: 0; padding: 0;">
+                &nbsp;
+            </div>
+            <span style="padding-left: 5px;">@izdelek.Cena €</span>
+        </div>
+    }
+</div>
 }
 
 @if (dobavitelji != null)
 {
-        <h4>Dobavitelji za izbrani izdelek</h4>
-        <ul>
+        <br>
+            <h4>Dobavitelji za izbrani izdelek</h4>
+            <ul>
         @foreach (var dobavitelj in dobavitelji)
         {
-                <li>@dobavitelj.Naziv</li>
+                    <li>@dobavitelj.Naziv</li>
         }
-        </ul>
+            </ul>
+            <br>
 }
 
 @if (trenutniIzdelek != null)

@@ -14,11 +14,6 @@ namespace blazor_n8
         private string trenutniStolpecZaSortiranje = string.Empty;
         private bool sortiranjePadajoce = false;
 
-        public Dobavitelji(HttpClient http)
-        {
-            Http = http;
-        }
-
         protected override async Task OnInitializedAsync()
         {
             await NaloziDobavitelje();
