@@ -3,11 +3,19 @@ using AIS_N3_Plavec_Alen.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace WebAPI;
 
 public class Program
 {
+    static JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions()
+    {
+        WriteIndented = true,
+        ReferenceHandler = ReferenceHandler.IgnoreCycles
+    };
+
     private static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
@@ -68,70 +76,75 @@ public class Program
         var trgovina = new Trgovina(db);
 
         app.MapGet("/izdelki", (string? sortAttribute, bool? descending) =>
-            trgovina.PridobiIzdelke(sortAttribute ?? "", descending ?? false))
+            JsonSerializer.Serialize(trgovina.PridobiIzdelke(sortAttribute ?? "", descending ?? false), jsonSerializerOptions))
             .WithMetadata(new SwaggerOperationAttribute("Prikaži vse izdelke",
                 "Metoda, ki prikaže vse izdelke v bazi z možnostjo sortiranja"));
 
         app.MapGet("/dobavitelji", (string? sortAttribute, bool? descending) =>
-            trgovina.PridobiDobavitelje(sortAttribute ?? "", descending ?? false))
+            JsonSerializer.Serialize(trgovina.PridobiDobavitelje(sortAttribute ?? "", descending ?? false), jsonSerializerOptions))
             .WithMetadata(new SwaggerOperationAttribute("Prikaži vse dobavitelje",
                 "Metoda, ki prikaže vse dobavitelje v bazi z možnostjo sortiranja"));
 
         app.MapGet("/povezave", (string? attrSortiranja, bool? padajoce) =>
-            trgovina.PridobiSerializiranePovezave(attrSortiranja ?? "", padajoce ?? false))
+            JsonSerializer.Serialize(trgovina.PridobiSerializiranePovezave(attrSortiranja ?? "", padajoce ?? false), jsonSerializerOptions))
             .WithMetadata(new SwaggerOperationAttribute("Prikaži vse povezave",
                 "Metoda, ki prikaže vse povezave med izdelki in dobavitelji z možnostjo sortiranja"));
 
-        app.MapGet("/dobavitelji/{id}/izdelki", (int id) => trgovina.PridobiIzdelkePoDobaviteljId(id))
+        app.MapGet("/dobavitelji/{id}/izdelki", (int id) => JsonSerializer.Serialize(trgovina.PridobiIzdelkePoDobaviteljId(id), jsonSerializerOptions))
             .WithMetadata(new SwaggerOperationAttribute("Prikaži izdelke dobavitelja",
-                "Metoda, ki prikaže vse izdelke doloèenega dobavitelja"));
+                "Metoda, ki prikaže vse izdelke doloženega dobavitelja"));
 
-        app.MapGet("/izdelki/{id}/dobavitelji", (int id) => trgovina.PridobiDobaviteljePoIzdelekId(id))
+        app.MapGet("/izdelki/{id}/dobavitelji", (int id) => JsonSerializer.Serialize(trgovina.PridobiDobaviteljePoIzdelekId(id), jsonSerializerOptions))
             .WithMetadata(new SwaggerOperationAttribute("Prikaži dobavitelje izdelka",
-                "Metoda, ki prikaže vse dobavitelje doloèenega izdelka"));
+                "Metoda, ki prikaže vse dobavitelje doloženega izdelka"));
 
-        app.MapGet("/izdelki/{id}", (int id) => trgovina.PridobiIzdelekPoId(id))
+        app.MapGet("/izdelki/{id}", (int id) => JsonSerializer.Serialize(trgovina.PridobiIzdelekPoId(id), jsonSerializerOptions))
             .WithMetadata(new SwaggerOperationAttribute("Prikaži izdelek",
-                "Metoda, ki prikaže podatke o izdelku z doloèenim ID-jem"));
+                "Metoda, ki prikaže podatke o izdelku z doloženim ID-jem"));
 
-        app.MapGet("/dobavitelji/najvecIzdelkov", () => trgovina.PridobiDobaviteljaZNajvecIzdelki())
-            .WithMetadata(new SwaggerOperationAttribute("Dobavitelj z najveè izdelki",
-                "Metoda, ki prikaže dobavitelja z najveè izdelki v bazi"));
+        app.MapGet("/dobavitelji/najvecIzdelkov", () => JsonSerializer.Serialize(trgovina.PridobiDobaviteljaZNajvecIzdelki(), jsonSerializerOptions))
+            .WithMetadata(new SwaggerOperationAttribute("Dobavitelj z najvež izdelki",
+                "Metoda, ki prikaže dobavitelja z najvež izdelki v bazi"));
 
-        app.MapGet("/izdelki/najvisjaCena", () => trgovina.PridobiNajdrazjiIzdelek())
-            .WithMetadata(new SwaggerOperationAttribute("Izdelek z najvišjo ceno",
-                "Metoda, ki prikaže izdelek z najvišjo ceno"));
+        app.MapGet("/izdelki/najvisjaCena", () => JsonSerializer.Serialize(trgovina.PridobiNajdrazjiIzdelek(), jsonSerializerOptions))
+            .WithMetadata(new SwaggerOperationAttribute("Izdelek z najvižjo ceno",
+                "Metoda, ki prikaže izdelek z najvižjo ceno"));
 
-        app.MapGet("/izdelki/povprecnaCena", () => trgovina.PridobiPovprecnoCenoIzdelkov())
-            .WithMetadata(new SwaggerOperationAttribute("Povpreèna cena izdelkov",
-                "Metoda, ki prikaže povpreèno ceno vseh izdelkov"));
+        app.MapGet("/izdelki/povprecnaCena", () => JsonSerializer.Serialize(trgovina.PridobiPovprecnoCenoIzdelkov(), jsonSerializerOptions))
+            .WithMetadata(new SwaggerOperationAttribute("Povprežna cena izdelkov",
+                "Metoda, ki prikaže povprežno ceno vseh izdelkov"));
 
         app.MapPost("/izdelki/dodajIzdelek", ([FromBody] Izdelek izdelek) =>
-            {
-                if (izdelek == null) return Results.BadRequest("Neveljavni podatki o izdelku.");
+        {
+            if (izdelek == null) return Results.BadRequest("Neveljavni podatki o izdelku.");
 
-                db.Izdelki.Add(izdelek);
-                db.SaveChanges();
-                return Results.Created($"/izdelki/{izdelek.Id}", izdelek);
-            }).Produces<Izdelek>(StatusCodes.Status201Created)
-            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .WithMetadata(new SwaggerOperationAttribute("Dodaj nov izdelek, Metoda, ki doda nov izdelek v bazo"));
+            db.Izdelki.Add(izdelek);
+            db.SaveChanges();
+            return Results.Created($"/izdelki/{izdelek.Id}", Results.Json(izdelek));
+        })
+      .Produces<Izdelek>(StatusCodes.Status201Created)
+      .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+      .WithMetadata(new SwaggerOperationAttribute("Dodaj nov izdelek", "Metoda, ki doda nov izdelek v bazo"));
 
         app.MapPost("/dobavitelji/dodajDobavitelja", ([FromBody] Dobavitelj dobavitelj) =>
-            {
-                if (dobavitelj == null) return Results.BadRequest("Neveljavni podatki o dobavitelju.");
+        {
+            if (dobavitelj == null) return Results.BadRequest("Neveljavni podatki o dobavitelju.");
 
-                db.Dobavitelji.Add(dobavitelj);
-                db.SaveChanges();
-                return Results.Created($"/dobavitelji/{dobavitelj.Id}", dobavitelj);
-            }).Produces(StatusCodes.Status400BadRequest)
-            .Produces<Dobavitelj>(StatusCodes.Status201Created)
-            .WithMetadata(new SwaggerOperationAttribute("Dodaj novega dobavitelja",
-                "Metoda, ki doda novega dobavitelja v bazo"));
+            db.Dobavitelji.Add(dobavitelj);
+            db.SaveChanges();
+            return Results.Created($"/dobavitelji/{dobavitelj.Id}", Results.Json(dobavitelj));
+        })
+        .Produces<Dobavitelj>(StatusCodes.Status201Created)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .WithMetadata(new SwaggerOperationAttribute("Dodaj novega dobavitelja", "Metoda, ki doda novega dobavitelja v bazo"));
+
 
         app.MapPost("/povezave/dodajPovezavo", ([FromBody] IzdelekDobaviteljDTO izdelekDobaviteljDTO) =>
             {
-                if (db.Izdelki.Find(izdelekDobaviteljDTO.IzdelekId) != null && db.Dobavitelji.Find(izdelekDobaviteljDTO.DobaviteljId) != null)
+                var izdelek = db.Izdelki.Find(izdelekDobaviteljDTO.IzdelekId);
+                var dobavitelj = db.Dobavitelji.Find(izdelekDobaviteljDTO.DobaviteljId);
+
+                if (izdelek != null && dobavitelj != null)
                 {
                     var ustvarjenaPovezava = new IzdelekDobavitelj
                     {
@@ -140,8 +153,8 @@ public class Program
                         KolicinaNaZalogi = izdelekDobaviteljDTO.KolicinaNaZalogi
                     };
 
-                    ustvarjenaPovezava.Izdelek = db.Izdelki.Find(izdelekDobaviteljDTO.IzdelekId);
-                    ustvarjenaPovezava.Dobavitelj = db.Dobavitelji.Find(izdelekDobaviteljDTO.DobaviteljId);
+                    ustvarjenaPovezava.Izdelek = izdelek;
+                    ustvarjenaPovezava.Dobavitelj = dobavitelj;
 
                     db.IzdelekDobavitelji.Add(ustvarjenaPovezava);
                     db.SaveChanges();
@@ -219,7 +232,7 @@ public class Program
                 obstojecIzdelek.Kategorija = izdelek.Kategorija;
 
                 db.SaveChanges();
-                return Results.Ok();
+                return Results.Ok(Results.Json(obstojecIzdelek));
             }).Produces(StatusCodes.Status200OK)
             .Produces<Izdelek>(StatusCodes.Status404NotFound)
             .WithMetadata(new SwaggerOperationAttribute("Posodobi izdelek",

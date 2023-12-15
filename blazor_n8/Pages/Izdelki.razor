@@ -5,6 +5,8 @@
 @using System.Text
 @using Microsoft.AspNetCore.Components.Forms
 
+@namespace blazor_n8
+
 <h3>Izdelki</h3>
 <button class="btn btn-primary" @onclick="() => UrediIzdelek(new Izdelek())">Dodaj Izdelek</button>
 
@@ -24,48 +26,63 @@
 }
 else
 {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th @onclick='() => Sortiraj("Naziv")'>Naziv</th>
-                    <th>Opis</th>
-                    <th @onclick='() => Sortiraj("Kategorija")'>Kategorija</th>
-                    <th @onclick='() => Sortiraj("Cena")'>Cena</th>
-                    <th>
-                        <button class="btn btn-secondary" @onclick="() => PrikaziDobavitelje(-1)">Skrij Dobavitelje</button>
-                    </th>
-                    <th>Odstrani</th>
-                    <th>Uredi</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var izdelek in izdelki)
-            {
-                <tr>
-                    <td>@izdelek.Id</td>
-                    <td>@izdelek.Naziv</td>
-                    <td>@izdelek.Opis</td>
-                    <td>@izdelek.Kategorija</td>
-                    <td>@izdelek.Cena</td>
-                    <td>
-                        <button class="btn btn-info" @onclick="() => PrikaziDobavitelje(izdelek.Id)">Prikaži Dobavitelje</button>
-                    </td>
-                    <td>
-                        <button class="btn btn-danger" @onclick="() => OdstraniIzdelek(izdelek)">Odstrani</button>
-                    </td>
-                     <td>
-                    <button class="btn btn-secondary" @onclick="() => UrediIzdelek(izdelek)">Uredi</button>
-                </td>
-                </tr>
-            }
-            </tbody>
-        </table>
-        //<h4>Najvišja cena:@PrikaziNajvisjoCeno()@najvisjaCena</h4>
-        <h5>Povprečna cena: @povprecnaCena</h5>
-        <h5>Izdelek z najvišjo ceno: @izdelekNajvisjaCena.Id | @izdelekNajvisjaCena.Naziv | @izdelekNajvisjaCena.Cena</h5><br/><br/>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th @onclick='() => Sortiraj("Naziv")'>Naziv</th>
+            <th>Opis</th>
+            <th @onclick='() => Sortiraj("Kategorija")'>Kategorija</th>
+            <th @onclick='() => Sortiraj("Cena")'>Cena</th>
+            <th>
+                <button class="btn btn-secondary" @onclick="() => PrikaziDobavitelje(-1)">Skrij Dobavitelje</button>
+            </th>
+            <th>Odstrani</th>
+            <th>Uredi</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var izdelek in izdelki)
+    {
+        <tr>
+            <td>@izdelek.Id</td>
+            <td>@izdelek.Naziv</td>
+            <td>@izdelek.Opis</td>
+            <td>@izdelek.Kategorija</td>
+            <td>@izdelek.Cena</td>
+            <td>
+                <button class="btn btn-info" @onclick="() => PrikaziDobavitelje(izdelek.Id)">Prikaži Dobavitelje</button>
+            </td>
+            <td>
+                <button class="btn btn-danger" @onclick="() => OdstraniIzdelek(izdelek)">Odstrani</button>
+            </td>
+                <td>
+            <button class="btn btn-secondary" @onclick="() => UrediIzdelek(izdelek)">Uredi</button>
+        </td>
+        </tr>
+    }
+    </tbody>
+</table>
+<h5>Povprečna cena: @povprecnaCena</h5>
+<h5>Izdelek z najvišjo ceno: @izdelekNajvisjaCena.Id | @izdelekNajvisjaCena.Naziv | @izdelekNajvisjaCena.Cena</h5><br/><br/>
 
+   var najvisjaCena = izdelki.Max(i => i.Cena);
 
+    <div style="overflow-y: auto; max-height: 500px;">
+        @foreach (var izdelek in izdelki)
+        {
+            var barWidth = (izdelek.Cena / najvisjaCena) * 100;
+            <div style="margin-bottom: 10px;">
+                <div style="width: 200px; display: inline-block; vertical-align: middle;">
+                    @izdelek.Naziv
+                </div>
+                <div style="width: @barWidth%; max-width: 60%; height: 20px; background-color: skyblue; display: inline-block; vertical-align: middle;">
+                      &nbsp;
+                </div>
+                <span style="padding-left: 5px;">@izdelek.Cena €</span>
+            </div>
+        }
+    </div>
 }
 
 @if (dobavitelji != null)
@@ -88,109 +105,4 @@ else
         <InputNumber @bind-Value="trenutniIzdelek.Cena" />
         <button type="submit" class="btn btn-success">Shrani</button>
     </EditForm>
-}
-
-
-@code {
-    private Izdelek izdelekNajvisjaCena;
-    private Izdelek trenutniIzdelek;
-    private decimal povprecnaCena = 0;
-    private List<Izdelek> izdelki;
-    private List<Dobavitelj> dobavitelji;
-    private string trenutniStolpecZaSortiranje;
-    private bool sortiranjePadajoce = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await NaloziIzdelke();
-    }
-
-    private async Task NaloziIzdelke()
-    {
-        await PrikaziNajvisjoCeno();
-        await PrikaziPovprecnoCeno();
-        var url = $"/izdelki?sortAttribute={trenutniStolpecZaSortiranje}&descending={(sortiranjePadajoce ? "true" : "false")}";
-        izdelki = await Http.GetFromJsonAsync<List<Izdelek>>(url);
-        StateHasChanged();
-    }
-
-    private async Task Sortiraj(string imeStolpca)
-    {
-        if (imeStolpca == trenutniStolpecZaSortiranje)
-        {
-            sortiranjePadajoce = !sortiranjePadajoce;
-        }
-        else
-        {
-            trenutniStolpecZaSortiranje = imeStolpca;
-            sortiranjePadajoce = false;
-        }
-
-        await NaloziIzdelke();
-    }
-
-    private async Task ObSpremembiAtributa(ChangeEventArgs e)
-    {
-        trenutniStolpecZaSortiranje = e.Value.ToString();
-        await NaloziIzdelke();
-    }
-
-    private async Task SmerSortiranjaSpremenjena()
-    {
-        sortiranjePadajoce = !sortiranjePadajoce;
-        await NaloziIzdelke();
-    }
-
-    private async Task PrikaziDobavitelje(int izdelekId)
-    {
-        if (izdelekId != -1)
-            dobavitelji = await Http.GetFromJsonAsync<List<Dobavitelj>>($"/izdelki/{izdelekId}/dobavitelji");
-        else dobavitelji = null;
-    }
-
-    private async Task OdstraniIzdelek(Izdelek izdelek)
-    {
-        var odgovor = await Http.DeleteAsync($"/izdelki/odstraniIzdelek/{izdelek.Id}");
-
-        if (odgovor.IsSuccessStatusCode)
-        {
-            izdelki.Remove(izdelek);
-            NaloziIzdelke();
-            StateHasChanged();
-        }
-    }
-
-    private async Task PrikaziNajvisjoCeno()
-    {
-        izdelekNajvisjaCena = await Http.GetFromJsonAsync<Izdelek>("/izdelki/najvisjaCena");
-    }
-
-    private async Task PrikaziPovprecnoCeno()
-    {
-        povprecnaCena = await Http.GetFromJsonAsync<decimal>("/izdelki/povprecnaCena");
-    }
-
-    private void UrediIzdelek(Izdelek izdelek)
-    {
-        trenutniIzdelek = izdelek;
-    }
-
-    private async Task ShraniIzdelek()
-    {
-      HttpResponseMessage odgovor;
-        if (trenutniIzdelek.Id == 0)
-        {
-            odgovor = await Http.PostAsJsonAsync("/izdelki/dodajIzdelek", trenutniIzdelek);
-        }
-        else
-        {
-            odgovor = await Http.PutAsJsonAsync($"/izdelki/posodobiIzdelek/", trenutniIzdelek);
-        }
-
-        if (odgovor.IsSuccessStatusCode)
-        {
-            trenutniIzdelek = null;
-            await NaloziIzdelke();
-        }
-    }
 }

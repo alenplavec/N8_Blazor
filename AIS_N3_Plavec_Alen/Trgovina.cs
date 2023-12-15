@@ -35,7 +35,6 @@ public class Trgovina
                 poizvedba = poizvedba.OrderBy($"{attrSortiranja} {smer}");
             }
         }
-
         return poizvedba.ToList();
     }
 

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="BlazorStrap" Version="5.2.100-Preview3b" />
+    <PackageReference Include="ChartJs.Blazor.Fork" Version="2.0.2" />
     <PackageReference Include="MatBlazor" Version="2.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.11" PrivateAssets="all" />

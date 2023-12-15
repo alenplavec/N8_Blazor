@@ -1,9 +1,9 @@
 ﻿@page "/dobavitelji"
 @inject HttpClient Http
 @using blazor_n8.Models
-@using System.Text.Json
-@using System.Text
 @using Microsoft.AspNetCore.Components.Forms
+
+@namespace blazor_n8
 
 <h3>Dobavitelji</h3>
 <button class="btn btn-primary" @onclick="() => UrediDobavitelja(new Dobavitelj())">Dodaj Dobavitelja</button>
@@ -80,87 +80,4 @@ else
                 <li>@izdelek.Naziv</li>
         }
         </ul>
-}
-
-@code {
-    private Dobavitelj dobaviteljNajvecIzdelkov;
-    private List<Izdelek> izdelkiDobavitelja;
-    private Dobavitelj trenutniDobavitelj;
-    private List<Dobavitelj> dobavitelji;
-    private string trenutniStolpecZaSortiranje = string.Empty;
-    private bool sortiranjePadajoce = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await NaloziDobavitelje();
-        await PrikaziDobaviteljaZNajvecIzdelki();
-    }
-
-    private async Task ObSpremembiAtributa(ChangeEventArgs e)
-    {
-        trenutniStolpecZaSortiranje = e.Value.ToString();
-        await NaloziDobavitelje();
-    }
-
-    private async Task SmerSortiranjaSpremenjena()
-    {
-        sortiranjePadajoce = !sortiranjePadajoce;
-        await NaloziDobavitelje();
-    }
-
-    private async Task NaloziDobavitelje()
-    {
-        var url = $"/dobavitelji?sortAttribute={trenutniStolpecZaSortiranje}&descending={(sortiranjePadajoce ? "true" : "false")}";
-        dobavitelji = await Http.GetFromJsonAsync<List<Dobavitelj>>(url);
-        StateHasChanged();
-    }
-
-    private void UrediDobavitelja(Dobavitelj dobavitelj)
-    {
-        trenutniDobavitelj = dobavitelj;
-    }
-
-    private async Task ShraniDobavitelja()
-    {
-        HttpResponseMessage odgovor;
-        if (trenutniDobavitelj.Id == 0)
-        {
-            odgovor = await Http.PostAsJsonAsync("/dobavitelji/dodajDobavitelja", trenutniDobavitelj);
-        }
-        else
-        {
-            odgovor = await Http.PutAsJsonAsync($"/dobavitelji/posodobiDobavitelja", trenutniDobavitelj);
-        }
-
-        if (odgovor.IsSuccessStatusCode)
-        {
-            trenutniDobavitelj = null;
-            await NaloziDobavitelje();
-            StateHasChanged();
-        }
-    }
-
-    private async Task OdstraniDobavitelja(Dobavitelj dobavitelj)
-    {
-        var odgovor = await Http.DeleteAsync($"/dobavitelji/odstraniDobavitelja/{dobavitelj.Id}");
-
-        if (odgovor.IsSuccessStatusCode)
-        {
-            dobavitelji.Remove(dobavitelj);
-            await NaloziDobavitelje();
-            StateHasChanged();
-        }
-    }
-
-    private async Task PrikaziDobaviteljaZNajvecIzdelki()
-    {
-        dobaviteljNajvecIzdelkov = await Http.GetFromJsonAsync<Dobavitelj>("/dobavitelji/najvecIzdelkov");
-    }
-
-    private async Task PrikaziIzdelkeDobavitelja(int dobaviteljId)
-    {
-        if (dobaviteljId != -1)
-            izdelkiDobavitelja = await Http.GetFromJsonAsync<List<Izdelek>>($"/dobavitelji/{dobaviteljId}/izdelki");
-        else izdelkiDobavitelja = null;
-    }
 }

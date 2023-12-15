@@ -4,6 +4,8 @@
 @using System.Text.Json
 @using Microsoft.AspNetCore.Components.Forms
 
+@namespace blazor_n8
+
 <h3>Povezave</h3>
 
 <button class="btn btn-primary" @onclick="() => dodajanjePovezave = true">Dodaj Povezavo</button>
@@ -69,55 +71,4 @@ else
             </div>
             <button type="submit" class="btn btn-success">Shrani</button>
         </EditForm>
-}
-
-@code {
-    private IzdelekDobaviteljDTO novaPovezava = new IzdelekDobaviteljDTO();
-    private bool dodajanjePovezave = false;
-    private List<IzdelekDobaviteljDTO> povezave;
-    private string trenutniStolpecZaSortiranje = string.Empty;
-    private bool sortiranjePadajoce = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await NaloziPovezave();
-    }
-
-    private async Task NaloziPovezave()
-    {
-        var url = $"/povezave?attrSortiranja={trenutniStolpecZaSortiranje}&padajoce={sortiranjePadajoce}";
-        povezave = await Http.GetFromJsonAsync<List<IzdelekDobaviteljDTO>>(url);
-    }
-
-    private async Task ObSpremembiAtributa(ChangeEventArgs e)
-    {
-        trenutniStolpecZaSortiranje = e.Value.ToString();
-        await NaloziPovezave();
-    }
-
-    private async Task SmerSortiranjaSpremenjena()
-    {
-        sortiranjePadajoce = !sortiranjePadajoce;
-        await NaloziPovezave();
-    }
-
-    private async Task DodajPovezavo()
-    {
-        var odgovor = await Http.PostAsJsonAsync("/povezave/dodajPovezavo", novaPovezava);
-        if (odgovor.IsSuccessStatusCode)
-        {
-            dodajanjePovezave = false;
-            novaPovezava = new IzdelekDobaviteljDTO();
-            await NaloziPovezave();
-        }
-    }
-
-    private async Task OdstraniPovezavo(int id)
-    {
-        var odgovor = await Http.DeleteAsync($"/povezave/odstraniPovezavo/{id}");
-        if (odgovor.IsSuccessStatusCode)
-        {
-            await NaloziPovezave();
-        }
-    }
 }
